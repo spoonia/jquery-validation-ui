@@ -14,57 +14,71 @@
 */
 package org.grails.jquery.validation.ui
 
-import org.codehaus.groovy.grails.validation.ConstrainedPropertyBuilder
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory
 import org.springframework.validation.BeanPropertyBindingResult
-import org.codehaus.groovy.grails.commons.GrailsClassUtils
 
 /**
-*
-* @author <a href='mailto:limcheekin@vobject.com'>Lim Chee Kin</a>
-*
-* @since 0.1
-*/
+ *
+ * @author <a href='mailto:limcheekin@vobject.com'>Lim Chee Kin</a>
+ *
+ * @since 0.1
+ */
 class JQueryRemoteValidatorController {
-	
+
 	def jqueryValidationService
 
-	def validate = {		
+	def validate = {
 		def validatableClass = grailsApplication.classLoader.loadClass(params.validatableClass)
-		def constrainedProperties = jqueryValidationService.getConstrainedProperties(validatableClass)		
-		def validatableInstance 
+		def constrainedProperties = jqueryValidationService.getConstrainedProperties(validatableClass)
 
+		def validatableInstance
 		if (!params.id || params.id.equals("0")) {
 			validatableInstance = validatableClass.newInstance()
+			// Wire in spring dependencies...
+			applicationContext.autowireCapableBeanFactory?.autowireBeanProperties(
+					validatableInstance, AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, false)
 		} else {
-			def id = GrailsClassUtils.getPropertyType(validatableClass, 'id') == Long?params.id.toLong():params.id
-			validatableInstance = validatableClass.get(id)?:validatableClass.newInstance()
+			validatableInstance = validatableClass.get(params.id.toLong())
 		}
-		
+
 		def errors = new BeanPropertyBindingResult(validatableInstance, validatableInstance.class.name)
 		def constrainedProperty = constrainedProperties[params.property]
 		constrainedProperty.messageSource = grailsApplication.mainContext.messageSource
 
-		Object propertyValue 
+		Object propertyValue
 		if (constrainedProperty.propertyType == String) {
 			propertyValue = params[params.property]
 		} else {
-      		bindData(validatableInstance, params, [include: [params.property]])
-	    	propertyValue = validatableInstance."${params.property}"		
-		}
-		
-		if (propertyValue != validatableInstance."${params.property}") {
-			constrainedProperty.validate(validatableInstance, propertyValue, errors)
+			bindData(validatableInstance, params, [include: [params.property]])
+			propertyValue = validatableInstance."${params.property}"
 		}
 
-		if(validatableInstance.isAttached()) validatableInstance.discard()
+		// Need to bind multiple fields from the form for custom validation with more than one parameter.
+		def serializedDataMap = [:]
+		def serializedData = params.serializedData.decodeURL().split("&")
+		serializedData.collect {
+			it = it.split("=")
+			if (it.size() == 2) {
+				serializedDataMap.put(it[0], it[1])
+			}
+		}
+		bindData(validatableInstance, serializedDataMap)
+
+		constrainedProperty.validate(validatableInstance, propertyValue, errors)
+		if (grailsApplication.isDomainClass(validatableInstance.getClass()) && validatableInstance.isAttached()) {
+			validatableInstance.discard()
+		}
+
 		def fieldError = errors.getFieldError(params.property)
-		// println "fieldError = ${fieldError}, code = ${fieldError?.code}, params.constraint = ${params.constraint}"
-		
+//		println "fieldError = ${fieldError}\n code = ${fieldError?.code}\n params.constraint = ${params.constraint}"
+
 		response.setContentType("text/json;charset=UTF-8")
-		if (fieldError && fieldError.code.indexOf(params.constraint) > -1) {
-			// if constraint is known then render false (use default message), 
+//		if (fieldError && fieldError?.code.indexOf(params.constraint) > -1) {
+		if (fieldError && fieldError?.code) {
+			// if constraint is known then render false (use default message),
 			// otherwise render custom message.
-			render params.constraint ? "false" : """{"message":"${message(error: errors.getFieldError(params.property))}"}"""
+//			render params.constraint ? "false" : """{"message":"${message(error: errors.getFieldError(params.property))}"}"""
+			render """{"message":"${message(error: errors.getFieldError(params.property))}"}"""
 		} else {
 			render "true"
 		}

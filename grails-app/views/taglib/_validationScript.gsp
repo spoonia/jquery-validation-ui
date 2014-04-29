@@ -17,30 +17,30 @@
 *
 * @since 1.4.8
 --%>
-
+<%@page defaultCodec="none" %>
 $(function() {
-    var myForm = $("${form?"#${form}":"form:first"}");
+    var myForm = $("${form ? "#${form}" : "form:first"}");
     myForm.validate({
         onkeyup: ${onkeyup},
         errorClass: "${errorClass}",
         errorElement: "${errorElement}",	
         validClass: "${validClass}",			
         onsubmit: ${onsubmit},
-        <g:if test="${submitHandler}">
-    	submitHandler: ${submitHandler},
-        </g:if>
-        <g:if test="${highlightHandler}">
-        highlight: ${highlightHandler},
-        </g:if>
-        <g:if test="${unhighlightHandler}">
-        unhighlight: ${unhighlightHandler},
-        </g:if>		
-        ${renderErrorsOptions}			
-        rules: {
-            ${rules}              
-        }, 
-        messages: {
-            ${messages}              
-        }  
-    });
+		<g:if test="${submitHandler}">
+			submitHandler: ${submitHandler},
+		</g:if>
+		<g:if test="${highlightHandler}">
+			highlight: ${highlightHandler},
+		</g:if>
+		<g:if test="${unhighlightHandler}">
+			unhighlight: ${unhighlightHandler},
+		</g:if>
+		${renderErrorsOptions}
+		rules: {
+			${rules}
+		},
+		messages: {
+			${messages}
+		}
+	});
 });

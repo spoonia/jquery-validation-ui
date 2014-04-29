@@ -47,9 +47,9 @@ CustomConstraintsMap = [
 {code}
 The @'Javascript Code'@ is Javascript code specific to your custom constraints.  This will be rendered by @<jqvalui:renderValidationScript />@ tag. Please refer to 
 source code of the server-side implementation of phone constraint 
-[here|http://github.com/limcheekin/jquery-validation-ui/blob/master/test/unit/org/grails/jquery/validation/ui/PhoneConstraintTests.groovy] 
+[here|http://github.com/spoonia/jquery-validation-ui/blob/master/test/unit/org/grails/jquery/validation/ui/PhoneConstraintTests.groovy]
 and the client-side implementation 
-[here|http://github.com/limcheekin/jquery-validation-ui/blob/master/web-app/js/jquery-validation-ui/grails-validation-methods.js] 
+[here|http://github.com/spoonia/jquery-validation-ui/blob/master/web-app/js/jquery-validation-ui/grails-validation-methods.js]
 (scroll down to bottom, the last method) to see how it was implemented.
 
 h3. Internationalization Support

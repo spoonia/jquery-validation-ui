@@ -21,7 +21,7 @@
 */
 class JqueryValidationUiGrailsPlugin {
     // the plugin version
-    def version = "1.4.9"
+    def version = "1.5.0"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "1.2.2 > *"
     // the other plugins this plugin depends on
@@ -37,13 +37,14 @@ class JqueryValidationUiGrailsPlugin {
 	// Additional developers
 	def developers = [
 		[name:"Brian Saville", email:"bksaville@gmail.com"],
+		[name:"Sandeep Poonia", email:"sandeep.poonia.90@gmail.com"],
 	]
 	
     def title = "JQuery Validation UI Plugin - Client Side Validation without writing JavaScript"
     def description = 'JQuery Validation UI Plugin - Client Side Validation without writing JavaScript'
 
     // URL to the plugin's documentation
-  def documentation = "http://limcheekin.github.com/jquery-validation-ui"
-	def issueManagement = [ system:"GitHub", url:"http://github.com/limcheekin/jquery-validation-ui/issues" ]
-	def scm = [ url:"http://github.com/limcheekin/jquery-validation-ui" ]
+  def documentation = "http://spoonia.github.com/jquery-validation-ui"
+	def issueManagement = [ system:"GitHub", url:"http://github.com/spoonia/jquery-validation-ui/issues" ]
+	def scm = [ url:"http://github.com/spoonia/jquery-validation-ui" ]
 }

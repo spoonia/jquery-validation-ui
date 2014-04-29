@@ -18,16 +18,16 @@
 * @since 1.4.8
 --%>
 
-<g:set var="hasResourcesPlugin" value="${grailsApplication.mainContext.pluginManager.hasGrailsPlugin('resources')}" />
+<g:set var="hasResourcesPlugin" value="${grailsApplication.mainContext.pluginManager.hasGrailsPlugin('resources')}"/>
 
 <g:if test="${hasResourcesPlugin}">
-    <r:script>
-    <g:render plugin="jqueryValidationUi" template="/taglib/validationScript" model="${pageScope.variables}"/>
-    </r:script>
+	<r:script>
+		<g:render plugin="jqueryValidationUi" template="/taglib/validationScript" model="${pageScope.variables}"/>
+	</r:script>
 </g:if>
 <g:else>
-    <g:javascript>
-    <g:render plugin="jqueryValidationUi" template="/taglib/validationScript" model="${pageScope.variables}"/>    
-    </g:javascript>
+	<g:javascript>
+		<g:render plugin="jqueryValidationUi" template="/taglib/validationScript" model="${pageScope.variables}"/>
+	</g:javascript>
 </g:else>
 

@@ -103,7 +103,8 @@ Client side validation enabled by JQuery Validation using Constraints Map, these
 rules such as @StringConstraintsMap@, @NumberConstraintsMap@, @CollectionConstraintsMap@, @DateConstraintsMap@ and @ObjectConstraintsMap@ (@ObjectConstraintsMap@ is 
 catch-all map if the property is not belongs to any other Constraints Maps). Refer to 
 [JQuery Validation documentation|http://docs.jquery.com/Plugins/Validation#List_of_built-in_Validation_methods] for built-in validation rules supported by the library and 
-[additional rules|http://github.com/limcheekin/jquery-validation-ui/blob/master/web-app/js/jquery-validation-ui/grails-validation-methods.js] 
+[additional rules|http://github.com/spoonia/jquery-validation-ui/blob/master/web-app/js/jquery-validation-ui/grails
+-validation-methods.js]
 written for this plugin.
 
 {note}@CustomConstraintsMap@ configuration supported since 1.1 released. If previous version of the plugin was installed, upgrade to 1.1 version will not update 

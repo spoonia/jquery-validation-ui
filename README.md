@@ -1,1 +1,1 @@
-See the latest documetation [here](http://limcheekin.github.com/jquery-validation-ui/).
+See the latest documetation [here](http://spoonia.github.com/jquery-validation-ui/).

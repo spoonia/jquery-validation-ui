@@ -53,6 +53,9 @@
 		size:'rangelength',
 		matches:'matches',
 		notEqual:'notEqual',
+		notEqualTo:'notEqualTo',
+		equal:'equal',
+		equalTo:'equalTo',
 		url:'url',
 		nullable:'required',
 		unique:'unique',
@@ -65,6 +68,9 @@
 		max:'max',
 		range:'range',
 		notEqual:'notEqual',
+		notEqualTo:'notEqualTo',
+		equal:'equal',
+		equalTo:'equalTo',
 		nullable:'required',
 		inList:'inList',
 		unique:'unique',
@@ -84,6 +90,9 @@
 		max:'maxDate',
 		range:'rangeDate',
 		notEqual:'notEqual',
+		notEqualTo:'notEqualTo',
+		equal:'equal',
+		equalTo:'equalTo',
 		nullable:'required',
 		inList:'inList',
 		unique:'unique',
@@ -100,7 +109,7 @@
 		phoneUS:'true',
 		alphanumeric:'true',
 		letterswithbasicpunc:'true',
-    lettersonly:'true'
+		lettersonly:'true'
 	]	
 }
 '''
