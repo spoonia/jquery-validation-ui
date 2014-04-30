@@ -29,32 +29,56 @@ jQuery.validator.addMethod("matches", function (value, element, param) {
 
 // notEqual: "ABC"
 jQuery.validator.addMethod("notEqual", function (value, element, param) {
-	return this.optional(element) || value != param;
-}, jQuery.validator.format('Value should not equals to "{0}"'));
+		return this.optional(element) || value != param;
+	}, function (param, element) {
+		var sid = $(element).attr('id');
+		sid = $(element).attr('name') ? $(element).attr('name') : tid;
+		return jQuery.validator.format('Value of "{0}" should not be "{1}".', sid, param);
+	}
+);
 
 // notEqualTo: "#ABC"
 jQuery.validator.addMethod("notEqualTo", function (value, element, param) {
-	return this.optional(element) || value != $(param).val();
-}, jQuery.validator.format('Value should not equals to "{0}"'));
+		if (param.charAt(0) != '#') {
+			param = '#' + param
+		}
+		return this.optional(element) || value != $(param).val();
+	}, function (param, element) {
+		if (param.charAt(0) != '#') {
+			param = '#' + param
+		}
+		var tid = $(param).attr('id');
+		var sid = $(element).attr('id');
+		tid = $(param).attr('name') ? $(param).attr('name') : tid
+		sid = $(element).attr('name') ? $(element).attr('name') : tid
+		return jQuery.validator.format('"{0}" and {1}" should not have same value.', sid, tid);
+	}
+);
 
 // equal: "ABC"
 jQuery.validator.addMethod("equal", function (value, element, param) {
 		return value == param;
-	}, function (value, source) {
-		var sid = $(source).attr('id');
-		sid = $(source).attr('name') ? $(source).attr('name') : tid
-		return jQuery.validator.format('"{0}" is not equal to "{1}".', sid, value);
+	}, function (param, element) {
+		var sid = $(element).attr('id');
+		sid = $(element).attr('name') ? $(element).attr('name') : tid
+		return jQuery.validator.format('"{0}" and {1}" should have same value.', sid, param);
 	}
 );
 
 // equalTo: "#ABC"
 jQuery.validator.addMethod("equalTo", function (value, element, param) {
+		if (param.charAt(0) != '#') {
+			param = '#' + param
+		}
 		return value == $(param).val();
-	}, function (target, source) {
-		var tid = $(target).attr('id');
-		var sid = $(source).attr('id');
-		tid = $(target).attr('name') ? $(target).attr('name') : tid
-		sid = $(source).attr('name') ? $(source).attr('name') : tid
+	}, function (param, element) {
+		if (param.charAt(0) != '#') {
+			param = '#' + param
+		}
+		var tid = $(param).attr('id');
+		var sid = $(element).attr('id');
+		tid = $(param).attr('name') ? $(param).attr('name') : tid
+		sid = $(element).attr('name') ? $(element).attr('name') : tid
 		return jQuery.validator.format('"{0}" and {1}" should have same value.', sid, tid);
 	}
 );

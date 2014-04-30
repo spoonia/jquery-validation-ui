@@ -103,7 +103,7 @@ class JqueryValidationService {
 		return constrainedProperties
 	}
 
-	String createJavaScriptConstraints(List constrainedPropertiesEntries, Locale locale) {
+	String createJavaScriptConstraints(List constrainedPropertiesEntries, List<CustomConstraintEntry> constraintEntries, Locale locale) {
 		FastStringWriter javaScriptConstraints = new FastStringWriter(VALIDATION_RULE_LENGTH * constrainedPropertiesEntries.size())
 		String namespacedPropertyName
 		def constrainedPropertyValues
@@ -112,10 +112,28 @@ class JqueryValidationService {
 			constrainedPropertyValues = constrainedPropertiesEntry.constrainedProperties.values()
 			constrainedPropertyValues.eachWithIndex { constrainedProperty, propertyIndex ->
 				namespacedPropertyName = constrainedPropertiesEntry.namespace ? "'${constrainedPropertiesEntry.namespace}.${constrainedProperty.propertyName}'" : constrainedProperty.propertyName
-				javaScriptConstraints << "${namespacedPropertyName}: "
-				javaScriptConstraints << _createJavaScriptConstraints(constrainedProperty, locale, constrainedPropertiesEntry.namespace, false)
+				javaScriptConstraints << _createJavaScriptConstraints(constrainedProperty, locale, constrainedPropertiesEntry.namespace, false,
+						constraintEntries, namespacedPropertyName)
 				if (entryIndex == constrainedPropertiesEntries.size() - 1 &&
 						propertyIndex == constrainedPropertyValues.size() - 1) {
+					if (constraintEntries) {
+						javaScriptConstraints << ",\n"
+						int size = constraintEntries.size()
+						constraintEntries.eachWithIndex {
+							CustomConstraintEntry entry, int index ->
+								if ('unique'.equalsIgnoreCase(entry.rule)) {
+									javaScriptConstraints << createRemoteJavaScriptConstraints(RequestContextHolder.requestAttributes.contextPath, entry.rule,
+											entry.parameter, entry.property)
+								} else {
+									javaScriptConstraints << "${entry.property}: { ${entry.rule}: '${entry.parameter}' }"
+								}
+								if (index == size - 1) {
+									javaScriptConstraints << "\n"
+								} else {
+									javaScriptConstraints << ",\n"
+								}
+						}
+					}
 					javaScriptConstraints << "\n"
 				} else {
 					javaScriptConstraints << ",\n"
@@ -125,7 +143,7 @@ class JqueryValidationService {
 		return javaScriptConstraints.toString()
 	}
 
-	String createJavaScriptMessages(List constrainedPropertiesEntries, Locale locale) {
+	String createJavaScriptMessages(List constrainedPropertiesEntries, List<CustomConstraintEntry> constraintEntries, Locale locale) {
 		FastStringWriter javaScriptMessages = new FastStringWriter(VALIDATION_MESSAGE_LENGTH * constrainedPropertiesEntries.size())
 		String namespacedPropertyName
 		def constrainedPropertyValues
@@ -134,10 +152,22 @@ class JqueryValidationService {
 			constrainedPropertyValues = constrainedPropertiesEntry.constrainedProperties.values()
 			constrainedPropertyValues.eachWithIndex { constrainedProperty, propertyIndex ->
 				namespacedPropertyName = constrainedPropertiesEntry.namespace ? "'${constrainedPropertiesEntry.namespace}.${constrainedProperty.propertyName}'" : constrainedProperty.propertyName
-				javaScriptMessages << "${namespacedPropertyName}: "
-				javaScriptMessages << _createJavaScriptMessages(constrainedProperty, locale, constrainedPropertiesEntry.namespace)
+				javaScriptMessages << _createJavaScriptMessages(constrainedProperty, locale, constrainedPropertiesEntry.namespace, constraintEntries, namespacedPropertyName)
 				if (entryIndex == constrainedPropertiesEntries.size() - 1 &&
 						propertyIndex == constrainedPropertyValues.size() - 1) {
+					if (constraintEntries) {
+						javaScriptMessages << ",\n"
+						int size = constraintEntries.size()
+						constraintEntries.eachWithIndex {
+							CustomConstraintEntry entry, int index ->
+								javaScriptMessages << "${entry.property}: { ${entry.rule}: '${entry.message}' }"
+								if (index == size - 1) {
+									javaScriptMessages << "\n"
+								} else {
+									javaScriptMessages << ",\n"
+								}
+						}
+					}
 					javaScriptMessages << "\n"
 				} else {
 					javaScriptMessages << ",\n"
@@ -186,7 +216,7 @@ class JqueryValidationService {
 		return constraintsMap
 	}
 
-	private List getConstraints(def constrainedProperty) {
+	private static List getConstraints(def constrainedProperty) {
 		def constraints = []
 		constraints.addAll(constrainedProperty.appliedConstraints)
 		if (constraints.find { it.name == "blank" } && constraints.find { it.name == "nullable" }) {
@@ -195,7 +225,7 @@ class JqueryValidationService {
 		return constraints
 	}
 
-	private String createRemoteJavaScriptConstraints(String contextPath, String constraintName, String validatableClassName, String propertyName) {
+	private static String createRemoteJavaScriptConstraints(String contextPath, String constraintName, String validatableClassName, String propertyName) {
 		String remoteJavaScriptConstraints = "\t${constraintName.equals('unique') || constraintName.equals('validator') ? constraintName : 'custom'}: {\n" +
 				"\turl: '${contextPath}/JQueryRemoteValidator/validate',\n" +
 				"\ttype: 'post',\n" +
@@ -205,7 +235,7 @@ class JqueryValidationService {
 
 		if (!constraintName.equals('unique') && !constraintName.equals('validator')) {
 			remoteJavaScriptConstraints += ",\n\t\tconstraint: '${constraintName}'"
-		}else{
+		} else {
 			remoteJavaScriptConstraints += ",\n\t\tserializedData: function() { return myForm.serialize() }\n"
 		}
 
@@ -219,7 +249,7 @@ class JqueryValidationService {
 	}
 
 	private String getTypeMismatchMessage(Class validatableClass, Class propertyType, String propertyNamespace, String propertyName, Locale locale) {
-		def code
+		def code = null
 		def defaultMessage = "Error message for ${code} undefined."
 		def message
 
@@ -309,13 +339,14 @@ class JqueryValidationService {
 	}
 
 	private String _createJavaScriptConstraints(
-			def constrainedProperty, Locale locale, String namespace, boolean forMetadata) {
+			def constrainedProperty, Locale locale, String namespace, boolean forMetadata, List<CustomConstraintEntry> constraintEntries, String namespacedPropertyName) {
+
 		FastStringWriter javaScriptConstraints = new FastStringWriter(forMetadata ? VALIDATION_RULE_LENGTH : VALIDATION_RULE_LENGTH + VALIDATION_MESSAGE_LENGTH)
 		def constraintsMap
 		String javaScriptConstraint
 		String javaScriptConstraintCode
 
-		javaScriptConstraints << "{ "
+		javaScriptConstraints << "${namespacedPropertyName}: { "
 		constraintsMap = getConstraintsMap(constrainedProperty.propertyType)
 		def constraints = getConstraints(constrainedProperty)
 
@@ -466,6 +497,23 @@ class JqueryValidationService {
 			}
 		}
 
+		if (constraintEntries) {
+			Iterator<CustomConstraintEntry> iterator = constraintEntries.iterator();
+			while (iterator.hasNext()) {
+				CustomConstraintEntry entry = iterator.next()
+				if (entry.property.equalsIgnoreCase(namespacedPropertyName)) {
+					iterator.remove()
+					if ('unique'.equalsIgnoreCase(entry.rule)) {
+						if (javaScriptConstraints.toString().split("(?i)[\\s|,]+unique[\\s]*:[\\s]*[{]").length <= 1) {
+							javaScriptConstraints << ", " + createRemoteJavaScriptConstraints(RequestContextHolder.requestAttributes.contextPath, entry.rule, entry.parameter, entry.property)
+						}
+					} else {
+						javaScriptConstraints << ", ${entry.rule}: '${entry.parameter}' "
+					}
+				}
+			}
+		}
+
 		if (forMetadata) {
 			javaScriptConstraints << ", messages: ${_createJavaScriptMessages(constrainedProperty, locale, namespace)}"
 		}
@@ -475,7 +523,8 @@ class JqueryValidationService {
 		return javaScriptConstraints.toString()
 	}
 
-	private String _createJavaScriptMessages(def constrainedProperty, Locale locale, String namespace) {
+	private String _createJavaScriptMessages(def constrainedProperty, Locale locale, String namespace, List<CustomConstraintEntry> constraintEntries,
+	                                         String namespacedPropertyName) {
 		def args = []
 		FastStringWriter javaScriptMessages = new FastStringWriter(VALIDATION_MESSAGE_LENGTH)
 		String javaScriptConstraint
@@ -484,7 +533,7 @@ class JqueryValidationService {
 
 
 		def constraintsMap = getConstraintsMap(constrainedProperty.propertyType)
-		javaScriptMessages << "{ "
+		javaScriptMessages << "${namespacedPropertyName}: { "
 		constraints = getConstraints(constrainedProperty)
 		javaScriptMessageCode = null
 		switch (constrainedProperty.propertyType) {
@@ -594,6 +643,7 @@ class JqueryValidationService {
 							VALUE_PLACEHOLDER, "' + \$('#${constrainedProperty.propertyName}').val() + '");
 				} // else remote validation, using remote message.
 			}
+
 			if (javaScriptMessageCode) {
 				javaScriptMessages << javaScriptMessageCode
 				if (i < constraints.size() - 1) {
@@ -603,6 +653,18 @@ class JqueryValidationService {
 				}
 			}
 		}
+
+		if (constraintEntries) {
+			Iterator<CustomConstraintEntry> iterator = constraintEntries.iterator();
+			while (iterator.hasNext()) {
+				CustomConstraintEntry entry = iterator.next()
+				if (entry.property.equalsIgnoreCase(namespacedPropertyName)) {
+					iterator.remove()
+					javaScriptMessages << ", ${entry.rule}: '${entry.message}'"
+				}
+			}
+		}
+
 		javaScriptMessages << "}"
 
 		return javaScriptMessages.toString()

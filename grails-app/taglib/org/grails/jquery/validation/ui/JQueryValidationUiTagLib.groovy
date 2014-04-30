@@ -14,6 +14,7 @@
  */
 package org.grails.jquery.validation.ui
 
+import groovy.util.slurpersupport.GPathResult
 import org.springframework.util.ReflectionUtils
 import org.springframework.web.servlet.support.RequestContextUtils as RCU
 
@@ -126,6 +127,31 @@ class JQueryValidationUiTagLib {
 	}
 
 	def renderValidationScript = { attrs, body ->
+		String xmlContent = body()
+		List<CustomConstraintEntry> constraintEntries = []
+		if (xmlContent) {
+			GPathResult constraints = new XmlSlurper().parseText(xmlContent)
+			constraints.constraint.each {
+				constraint ->
+					CustomConstraintEntry entry =
+							new CustomConstraintEntry(
+									rule: constraint.rule,
+									property: constraint.property,
+									parameter: constraint.parameter,
+									message: constraint.message)
+					if (!entry.rule) {
+						throw new Exception('<rule></rule> tag missing from custom constraint body!')
+					}
+					if (!entry.property) {
+						throw new Exception('<property></property> tag missing from custom constraint body!')
+					}
+					if (!entry.parameter) {
+						throw new Exception('<parameter></parameter> tag missing from custom constraint body!')
+					}
+
+					constraintEntries << entry
+			}
+		}
 		String forClass = attrs.remove("for")
 		def alsoProperties = attrs.remove("also")
 		def notProperties = attrs.remove("not")
@@ -178,7 +204,7 @@ class JQueryValidationUiTagLib {
 			renderErrorsOptions = """
 errorContainer: '$errorContainer',
 errorLabelContainer: '$errorLabelContainer',
-wrapper: '$errorWrapper',	
+wrapper: '$errorWrapper',
 """
 		} else if (qtip) {
 			renderErrorsOptions = """
@@ -232,8 +258,9 @@ errorPlacement: function(error, element)
 			}
 			constrainedPropertiesEntries << childConstrainedPropertiesEntry
 		}
-		String rules = jqueryValidationService.createJavaScriptConstraints(constrainedPropertiesEntries, locale)
-		String messages = jqueryValidationService.createJavaScriptMessages(constrainedPropertiesEntries, locale)
+
+		String rules = jqueryValidationService.createJavaScriptConstraints(constrainedPropertiesEntries, constraintEntries.clone(), locale)
+		String messages = jqueryValidationService.createJavaScriptMessages(constrainedPropertiesEntries, constraintEntries, locale)
 		out << render(plugin: 'jqueryValidationUi', template: '/taglib/renderValidationScript',
 				model: [
 						form              : form, onkeyup: onkeyup, errorClass: errorClass,
@@ -244,8 +271,8 @@ errorPlacement: function(error, element)
 				])
 	}
 
-	private Field findField(Class clazz, String name) {
-		Field field
+	private static Field findField(Class clazz, String name) {
+		Field field = null
 
 		if (name.indexOf('.') == -1) {
 			field = ReflectionUtils.findField(clazz, name)

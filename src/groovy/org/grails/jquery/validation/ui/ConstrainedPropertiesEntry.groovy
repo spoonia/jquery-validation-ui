@@ -6,3 +6,10 @@ class ConstrainedPropertiesEntry {
 	Class validatableClass
 	Map constrainedProperties
 }
+
+class CustomConstraintEntry {
+	String rule
+	String property
+	String parameter
+	String message
+}
