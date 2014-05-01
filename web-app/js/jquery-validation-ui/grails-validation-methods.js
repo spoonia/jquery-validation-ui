@@ -32,7 +32,7 @@ jQuery.validator.addMethod("notEqual", function (value, element, param) {
 		return this.optional(element) || value != param;
 	}, function (param, element) {
 		var sid = $(element).attr('id');
-		sid = $(element).attr('name') ? $(element).attr('name') : tid;
+		sid = $(element).attr('placeholder') ? $(element).attr('placeholder') : tid;
 		return jQuery.validator.format('Value of "{0}" should not be "{1}".', sid, param);
 	}
 );
@@ -49,9 +49,9 @@ jQuery.validator.addMethod("notEqualTo", function (value, element, param) {
 		}
 		var tid = $(param).attr('id');
 		var sid = $(element).attr('id');
-		tid = $(param).attr('name') ? $(param).attr('name') : tid
-		sid = $(element).attr('name') ? $(element).attr('name') : tid
-		return jQuery.validator.format('"{0}" and {1}" should not have same value.', sid, tid);
+		tid = $(param).attr('placeholder') ? $(param).attr('placeholder') : tid
+		sid = $(element).attr('placeholder') ? $(element).attr('placeholder') : tid
+		return jQuery.validator.format('"{0}" and "{1}" should not have same value.', sid, tid);
 	}
 );
 
@@ -61,7 +61,7 @@ jQuery.validator.addMethod("equal", function (value, element, param) {
 	}, function (param, element) {
 		var sid = $(element).attr('id');
 		sid = $(element).attr('name') ? $(element).attr('name') : tid
-		return jQuery.validator.format('"{0}" and {1}" should have same value.', sid, param);
+		return jQuery.validator.format('Value of "{0}" should be "{1}".', sid, param);
 	}
 );
 
@@ -79,7 +79,7 @@ jQuery.validator.addMethod("equalTo", function (value, element, param) {
 		var sid = $(element).attr('id');
 		tid = $(param).attr('name') ? $(param).attr('name') : tid
 		sid = $(element).attr('name') ? $(element).attr('name') : tid
-		return jQuery.validator.format('"{0}" and {1}" should have same value.', sid, tid);
+		return jQuery.validator.format('"{0}" and "{1}" should have same value.', sid, tid);
 	}
 );
 

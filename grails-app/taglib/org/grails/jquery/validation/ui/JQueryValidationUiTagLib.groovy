@@ -32,6 +32,58 @@ class JQueryValidationUiTagLib {
 
 	def jqueryValidationService
 
+	def applyCustomConstraint = {
+		attrs, body ->
+			if (!attrs.rule) throwTagError("Tag [applyCustomConstraint] is missing required attribute [rule]")
+			if (!attrs.property) throwTagError("Tag [applyCustomConstraint] is missing required attribute [property]")
+			if (!attrs.parameter) throwTagError("Tag [applyCustomConstraint] is missing required attribute [parameter]")
+
+			out << """
+				<constraint>
+				\t\t\t\t<rule>${attrs.rule}</rule>
+				\t\t\t\t<property>${attrs.property}</property>
+				\t\t\t\t<parameter>${attrs.parameter}</parameter>
+				"""
+			if (attrs.message)
+				out << "\t\t\t\t<message>${attrs.message}</message>"
+
+			out << "</constraint>"
+	}
+
+	def applyUniqueConstraint = {
+		attrs, body ->
+			if (!attrs.domain) throwTagError("Tag [applyUniqueConstraint] is missing required attribute [domain]")
+			if (!attrs.property) throwTagError("Tag [applyUniqueConstraint] is missing required attribute [property]")
+
+			out << """
+				<constraint>
+				\t\t\t\t<rule>unique</rule>
+				\t\t\t\t<property>${attrs.property}</property>
+				\t\t\t\t<parameter>${attrs.domain}</parameter>
+				"""
+			if (attrs.message)
+				out << "\t\t\t\t<message>${attrs.message}</message>"
+
+			out << "</constraint>"
+	}
+
+	def applyCustomValidator = {
+		attrs, body ->
+			if (!attrs.domain) throwTagError("Tag [applyCustomValidator] is missing required attribute [domain]")
+			if (!attrs.property) throwTagError("Tag [applyCustomValidator] is missing required attribute [property]")
+
+			out << """
+				<constraint>
+				\t\t\t\t<rule>validator</rule>
+				\t\t\t\t<property>${attrs.property}</property>
+				\t\t\t\t<parameter>${attrs.domain}</parameter>
+				"""
+			if (attrs.message)
+				out << "\t\t\t\t<message>${attrs.message}</message>"
+
+			out << "</constraint>"
+	}
+
 	def resources = { attrs, body ->
 		String type = attrs.remove("type")
 		def packed
@@ -128,8 +180,9 @@ class JQueryValidationUiTagLib {
 
 	def renderValidationScript = { attrs, body ->
 		String xmlContent = body()
-		List<CustomConstraintEntry> constraintEntries = []
+		Set<CustomConstraintEntry> constraintEntries = []
 		if (xmlContent) {
+			xmlContent = "<constraints>${xmlContent}</constraints>"
 			GPathResult constraints = new XmlSlurper().parseText(xmlContent)
 			constraints.constraint.each {
 				constraint ->
@@ -259,8 +312,8 @@ errorPlacement: function(error, element)
 			constrainedPropertiesEntries << childConstrainedPropertiesEntry
 		}
 
-		String rules = jqueryValidationService.createJavaScriptConstraints(constrainedPropertiesEntries, constraintEntries.clone(), locale)
-		String messages = jqueryValidationService.createJavaScriptMessages(constrainedPropertiesEntries, constraintEntries, locale)
+		String rules = jqueryValidationService.createJavaScriptConstraints(constrainedPropertiesEntries, constraintEntries.asList(), locale)
+		String messages = jqueryValidationService.createJavaScriptMessages(constrainedPropertiesEntries, constraintEntries.asList(), locale)
 		out << render(plugin: 'jqueryValidationUi', template: '/taglib/renderValidationScript',
 				model: [
 						form              : form, onkeyup: onkeyup, errorClass: errorClass,

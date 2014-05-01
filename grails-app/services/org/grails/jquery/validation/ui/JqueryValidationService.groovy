@@ -121,7 +121,7 @@ class JqueryValidationService {
 						int size = constraintEntries.size()
 						constraintEntries.eachWithIndex {
 							CustomConstraintEntry entry, int index ->
-								if ('unique'.equalsIgnoreCase(entry.rule)) {
+								if ('unique'.equalsIgnoreCase(entry.rule) || 'validator'.equalsIgnoreCase(entry.rule)) {
 									javaScriptConstraints << createRemoteJavaScriptConstraints(RequestContextHolder.requestAttributes.contextPath, entry.rule,
 											entry.parameter, entry.property)
 								} else {
@@ -160,7 +160,9 @@ class JqueryValidationService {
 						int size = constraintEntries.size()
 						constraintEntries.eachWithIndex {
 							CustomConstraintEntry entry, int index ->
-								javaScriptMessages << "${entry.property}: { ${entry.rule}: '${entry.message}' }"
+								if (entry.message) {
+									javaScriptMessages << "${entry.property}: { ${entry.rule}: '${entry.message}' }"
+								}
 								if (index == size - 1) {
 									javaScriptMessages << "\n"
 								} else {
@@ -503,12 +505,12 @@ class JqueryValidationService {
 				CustomConstraintEntry entry = iterator.next()
 				if (entry.property.equalsIgnoreCase(namespacedPropertyName)) {
 					iterator.remove()
-					if ('unique'.equalsIgnoreCase(entry.rule)) {
-						if (javaScriptConstraints.toString().split("(?i)[\\s|,]+unique[\\s]*:[\\s]*[{]").length <= 1) {
+					if (javaScriptConstraints.toString().split("(?i)[\\s|,]+${entry.rule}[\\s]*:[\\s]*[{|']").length <= 1) {
+						if ('unique'.equalsIgnoreCase(entry.rule) || 'validator'.equalsIgnoreCase(entry.rule)) {
 							javaScriptConstraints << ", " + createRemoteJavaScriptConstraints(RequestContextHolder.requestAttributes.contextPath, entry.rule, entry.parameter, entry.property)
+						} else {
+							javaScriptConstraints << ", ${entry.rule}: '${entry.parameter}' "
 						}
-					} else {
-						javaScriptConstraints << ", ${entry.rule}: '${entry.parameter}' "
 					}
 				}
 			}
@@ -660,7 +662,9 @@ class JqueryValidationService {
 				CustomConstraintEntry entry = iterator.next()
 				if (entry.property.equalsIgnoreCase(namespacedPropertyName)) {
 					iterator.remove()
-					javaScriptMessages << ", ${entry.rule}: '${entry.message}'"
+					if (javaScriptMessages.toString().split("(?i)[\\s|,]+${entry.rule}[\\s]*:[\\s]*[{|']").length <= 1 && entry.message) {
+						javaScriptMessages << ", ${entry.rule}: '${entry.message}'"
+					}
 				}
 			}
 		}
